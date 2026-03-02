@@ -4,6 +4,8 @@ import LeaveInPlaceModal from "./LeaveInPlaceModal";
 import CollectFromParcelPointModal from "./CollectFromParcelPointModal";
 import HoldCollectionModal from "./HoldCollectionModel";
 import TrustedPersonModal from "./TrustedPersonModal";
+import AlternateAddressModal from "./AlternateAddressModal";
+import ChangeDateModal from "./ChangeDateModal";
 
 interface DeliveryOption {
   id: string;
@@ -34,6 +36,8 @@ export default function DeliveryOptions({
   const [isParcelModalOpen, setIsParcelModalOpen] = useState(false);
   const [isHoldModalOpen, setIsHoldModalOpen] = useState(false);
   const [isTrustedModalOpen, setIsTrustedModalOpen] = useState(false);
+  const [isAlternateModalOpen, setIsAlternateModalOpen] = useState(false);
+  const [isChangeDateModalOpen, setIsChangeDateModalOpen] = useState(false);
 
   return (
     <section>
@@ -78,6 +82,16 @@ export default function DeliveryOptions({
                 return;
               }
 
+              if (option.id === "alternate") {
+                setIsAlternateModalOpen(true);
+                return;
+              }
+
+              if (option.id === "change-date") {
+                setIsChangeDateModalOpen(true);
+                return;
+              }
+
               onOptionSelect?.(option.id);
             }}
           />
@@ -103,6 +117,16 @@ export default function DeliveryOptions({
       <TrustedPersonModal
         isOpen={isTrustedModalOpen}
         onClose={() => setIsTrustedModalOpen(false)}
+      />
+
+      <AlternateAddressModal
+        isOpen={isAlternateModalOpen}
+        onClose={() => setIsAlternateModalOpen(false)}
+      />
+
+      <ChangeDateModal
+        isOpen={isChangeDateModalOpen}
+        onClose={() => setIsChangeDateModalOpen(false)}
       />
 
     </section>
