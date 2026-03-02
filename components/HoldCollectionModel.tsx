@@ -34,7 +34,6 @@ export default function ChangeDeliveryDateModal({
 
   const modalContent = (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-6">
-
       {/* Backdrop */}
       <div
         className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity duration-300"
@@ -53,7 +52,7 @@ export default function ChangeDeliveryDateModal({
         {/* Header */}
         <div className="flex justify-between items-center px-5 sm:px-8 pt-6 sm:pt-8 pb-4 border-b">
           <h2 className="text-lg sm:text-[22px] font-bold text-gray-900">
-            Change Delivery Date
+            Hold For Collection
           </h2>
 
           <button
@@ -74,7 +73,6 @@ export default function ChangeDeliveryDateModal({
 
         {/* Scrollable Body */}
         <div className="overflow-y-auto px-5 sm:px-8 py-6 space-y-6">
-
           {/* Collect From */}
           <div className="rounded-xl border border-[#233a5e] overflow-hidden">
             <div className="bg-[#233a5e] text-white px-5 sm:px-6 py-3 text-sm font-semibold">
@@ -91,24 +89,19 @@ export default function ChangeDeliveryDateModal({
                     { label: "Phone", value: "076 324 6388" },
                     {
                       label: "Hours",
-                      value:
-                        "Monday - Friday : 08:00 -18:00, Holidays: Closed",
+                      value: "Monday - Friday : 08:00 -18:00, Holidays: Closed",
                     },
                   ].map((row, i, arr) => (
                     <tr
                       key={row.label}
                       className={
-                        i < arr.length - 1
-                          ? "border-b border-[#d7e0ea]"
-                          : ""
+                        i < arr.length - 1 ? "border-b border-[#d7e0ea]" : ""
                       }
                     >
                       <td className="px-5 py-3 w-[40%] text-gray-500 border-r border-[#d7e0ea]">
                         {row.label}
                       </td>
-                      <td className="px-5 py-3 text-gray-800">
-                        {row.value}
-                      </td>
+                      <td className="px-5 py-3 text-gray-800">{row.value}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -128,7 +121,7 @@ export default function ChangeDeliveryDateModal({
                 value={collectionDate}
                 min={new Date().toISOString().split("T")[0]}
                 onChange={(e) => setCollectionDate(e.target.value)}
-                className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent appearance-none"
+                className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent appearance-none bg-slate-50/50 text-slate-400"
               />
 
               <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
@@ -153,7 +146,7 @@ export default function ChangeDeliveryDateModal({
               maxLength={300}
               value={text}
               onChange={(e) => setText(e.target.value)}
-              className="w-full border border-gray-300 rounded-xl px-4 py-3 h-[120px] text-sm resize-none outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+              className="w-full border border-gray-300 rounded-xl px-4 py-3 h-[120px] text-sm resize-none outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent bg-slate-50/50 text-slate-400"
             />
             <span className="absolute bottom-3 right-4 text-xs text-gray-400">
               {text.length}/300
@@ -180,12 +173,7 @@ export default function ChangeDeliveryDateModal({
         <div className="px-5 sm:px-8 py-4 border-t bg-white">
           <button
             onClick={onClose}
-            className="
-              w-full sm:w-auto
-              bg-orange-500 hover:bg-orange-600 active:bg-orange-700
-              text-white py-3 px-8
-              rounded-full text-sm font-semibold
-              shadow-md transition
+            className=" w-full bg-[#ff6b35] hover:bg-[#e85a20] text-white font-bold py-3.5 px-10 rounded-full transition-all flex items-center justify-center gap-2 active:scale-95 shadow-lg shadow-orange-200
             "
           >
             Done &gt;
