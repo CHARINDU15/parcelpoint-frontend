@@ -2,7 +2,10 @@
 import { useState } from "react";
 import LeaveInPlaceModal from "./LeaveInPlaceModal";
 import CollectFromParcelPointModal from "./CollectFromParcelPointModal";
-import HoldCollectionModal from "./HoldCollectionModel";
+import ChangeDeliveryDateModal from "./ChangeDeliveryDateModel";
+import TrustedPersonModal from "./TrustedPersonModal";
+
+
 
 interface DeliveryOption {
   id: string;
@@ -31,7 +34,10 @@ export default function DeliveryOptions({
 
   const [isLeaveModalOpen, setIsLeaveModalOpen] = useState(false);
   const [isParcelModalOpen, setIsParcelModalOpen] = useState(false);
+  const [isChangeDateModalOpen, setIsChangeDateModalOpen] = useState(false);
   const [isHoldModalOpen, setIsHoldModalOpen] = useState(false);
+  const [isTrustedModalOpen, setIsTrustedModalOpen] = useState(false);
+
 
   return (
     <section>
@@ -71,6 +77,11 @@ export default function DeliveryOptions({
                 return;
               }
 
+              if (option.id === "trusted-person") {
+                setIsTrustedModalOpen(true);
+                return;
+              }
+
               onOptionSelect?.(option.id);
             }}
           />
@@ -91,6 +102,11 @@ export default function DeliveryOptions({
       <HoldCollectionModal
         isOpen={isHoldModalOpen}
         onClose={() => setIsHoldModalOpen(false)}
+      />
+
+      <TrustedPersonModal
+        isOpen={isTrustedModalOpen}
+        onClose={() => setIsTrustedModalOpen(false)}
       />
 
     </section>
