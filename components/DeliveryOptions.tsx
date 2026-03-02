@@ -4,6 +4,7 @@ import LeaveInPlaceModal from "./LeaveInPlaceModal";
 import CollectFromParcelPointModal from "./CollectFromParcelPointModal";
 import HoldCollectionModal from "./HoldCollectionModel";
 import TrustedPersonModal from "./TrustedPersonModal";
+import AlternateAddressModal from "./AlternateAddressModal";
 
 interface DeliveryOption {
   id: string;
@@ -34,6 +35,7 @@ export default function DeliveryOptions({
   const [isParcelModalOpen, setIsParcelModalOpen] = useState(false);
   const [isHoldModalOpen, setIsHoldModalOpen] = useState(false);
   const [isTrustedModalOpen, setIsTrustedModalOpen] = useState(false);
+  const [isAlternateModalOpen, setIsAlternateModalOpen] = useState(false);
 
   return (
     <section>
@@ -78,6 +80,11 @@ export default function DeliveryOptions({
                 return;
               }
 
+              if (option.id === "alternate") {
+                setIsAlternateModalOpen(true);
+                return;
+              }
+
               onOptionSelect?.(option.id);
             }}
           />
@@ -103,6 +110,11 @@ export default function DeliveryOptions({
       <TrustedPersonModal
         isOpen={isTrustedModalOpen}
         onClose={() => setIsTrustedModalOpen(false)}
+      />
+
+      <AlternateAddressModal
+        isOpen={isAlternateModalOpen}
+        onClose={() => setIsAlternateModalOpen(false)}
       />
 
     </section>
