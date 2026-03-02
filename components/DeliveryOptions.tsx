@@ -116,7 +116,13 @@
 import { useState } from "react";
 import LeaveInPlaceModal from "./LeaveInPlaceModal";
 import CollectFromParcelPointModal from "./CollectFromParcelPointModal";
+<<<<<<< Updated upstream
 import ChangeDeliveryDateModal from "./ChangeDeliveryDateModel";
+=======
+import HoldCollectionModal from "./HoldCollectionModel";
+import TrustedPersonModal from "./TrustedPersonModal";
+
+>>>>>>> Stashed changes
 
 interface DeliveryOption {
   id: string;
@@ -145,7 +151,12 @@ export default function DeliveryOptions({
 
   const [isLeaveModalOpen, setIsLeaveModalOpen] = useState(false);
   const [isParcelModalOpen, setIsParcelModalOpen] = useState(false);
+<<<<<<< Updated upstream
   const [isChangeDateModalOpen, setIsChangeDateModalOpen] = useState(false);
+=======
+  const [isHoldModalOpen, setIsHoldModalOpen] = useState(false);
+  const [isTrustedModalOpen, setIsTrustedModalOpen] = useState(false);
+>>>>>>> Stashed changes
 
   return (
     <section>
@@ -185,6 +196,11 @@ export default function DeliveryOptions({
                 return;
               }
 
+              if (option.id === "trusted-person") {
+                setIsTrustedModalOpen(true);
+                return;
+              }
+
               onOptionSelect?.(option.id);
             }}
           />
@@ -205,6 +221,11 @@ export default function DeliveryOptions({
       <ChangeDeliveryDateModal
         isOpen={isChangeDateModalOpen}
         onClose={() => setIsChangeDateModalOpen(false)}
+      />
+
+      <TrustedPersonModal
+        isOpen={isTrustedModalOpen}
+        onClose={() => setIsTrustedModalOpen(false)}
       />
 
     </section>
