@@ -124,6 +124,11 @@ export default function DeliveryOptions({
         onClose={() => setIsAlternateModalOpen(false)}
       />
 
+      <ChangeDateModal
+        isOpen={isChangeDateModalOpen}
+        onClose={() => setIsChangeDateModalOpen(false)}
+      />
+
     </section>
   );
 }
