@@ -122,6 +122,9 @@ import ChangeDeliveryDateModal from "./ChangeDeliveryDateModel";
 import HoldCollectionModal from "./HoldCollectionModel";
 import TrustedPersonModal from "./TrustedPersonModal";
 
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 
 interface DeliveryOption {
@@ -156,6 +159,9 @@ export default function DeliveryOptions({
 =======
   const [isHoldModalOpen, setIsHoldModalOpen] = useState(false);
   const [isTrustedModalOpen, setIsTrustedModalOpen] = useState(false);
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 
   return (
@@ -201,6 +207,11 @@ export default function DeliveryOptions({
                 return;
               }
 
+              if (option.id === "trusted-person") {
+                setIsTrustedModalOpen(true);
+                return;
+              }
+
               onOptionSelect?.(option.id);
             }}
           />
@@ -221,6 +232,11 @@ export default function DeliveryOptions({
       <ChangeDeliveryDateModal
         isOpen={isChangeDateModalOpen}
         onClose={() => setIsChangeDateModalOpen(false)}
+      />
+
+      <TrustedPersonModal
+        isOpen={isTrustedModalOpen}
+        onClose={() => setIsTrustedModalOpen(false)}
       />
 
       <TrustedPersonModal
