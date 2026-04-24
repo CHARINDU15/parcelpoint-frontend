@@ -68,21 +68,25 @@ export default function NotificationsCard({
   return (
     <div
       className="rounded-2xl p-5 sm:p-6 fade-in-up fade-in-up-delay-1"
-      style={{ backgroundColor: "#243044" }}
+      style={{
+        backgroundColor: "#ffffff",
+        border: "1px solid #d8e1ec",
+        boxShadow: "0 18px 40px rgba(15, 23, 42, 0.05)",
+      }}
     >
       <div className="flex items-center gap-3 mb-5">
         <div
           className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-          style={{ backgroundColor: "#f97316" }}
+          style={{ backgroundColor: "#132235" }}
         >
           <Bell size={20} className="text-white" />
         </div>
         <div>
-          <p className="text-xs font-medium" style={{ color: "#64748b" }}>
+          <p className="text-xs font-medium" style={{ color: "#7a8798" }}>
             Current Notification Selection{" "}
             <Info size={12} className="inline-block ml-0.5" style={{ color: "#64748b" }} />
           </p>
-          <p className="text-base font-bold" style={{ color: "#f1f5f9" }}>
+          <p className="text-base font-bold" style={{ color: "#132235" }}>
             {preferredChannel || "Notification Preferences"}
           </p>
         </div>
@@ -93,16 +97,16 @@ export default function NotificationsCard({
           <div key={setting.id}>
             <div className="flex items-start justify-between gap-3">
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium" style={{ color: "#cbd5e1" }}>
+                <p className="text-sm font-medium" style={{ color: "#2d3d50" }}>
                   {setting.label}
                 </p>
                 {!setting.isOptOut && (
-                  <p className="text-xs mt-0.5" style={{ color: "#94a3b8" }}>
+                  <p className="text-xs mt-0.5" style={{ color: "#6b7b8d" }}>
                     {setting.detail}
                   </p>
                 )}
                 {setting.isOptOut && (
-                  <p className="text-xs mt-0.5 leading-relaxed" style={{ color: "#64748b" }}>
+                  <p className="text-xs mt-0.5 leading-relaxed" style={{ color: "#7a8798" }}>
                     {setting.detail}
                   </p>
                 )}
@@ -117,7 +121,7 @@ export default function NotificationsCard({
               </label>
             </div>
             {setting.id !== "optout" && (
-              <div className="mt-4" style={{ borderBottom: "1px solid #2c3a52" }} />
+              <div className="mt-4" style={{ borderBottom: "1px solid #e2e8f0" }} />
             )}
           </div>
         ))}

@@ -22,8 +22,8 @@ export default function NavBar({ activeTab = "My Shipment", onTabChange }: NavBa
     <nav
       className="w-full"
       style={{
-        backgroundColor: "#1a2332",
-        borderBottom: "1px solid #2c3a52",
+        backgroundColor: "rgba(255, 255, 255, 0.78)",
+        borderBottom: "1px solid #d8e1ec",
       }}
     >
       <div className="max-w-6xl mx-auto px-4 sm:px-6">
@@ -36,14 +36,14 @@ export default function NavBar({ activeTab = "My Shipment", onTabChange }: NavBa
                 onClick={() => onTabChange?.(item.label)}
                 className="relative px-4 py-3 text-sm font-medium whitespace-nowrap transition-all duration-200 flex-shrink-0"
                 style={{
-                  color: isActive ? "#f97316" : "#94a3b8",
+                  color: isActive ? "#c55a11" : "#6b7b8d",
                 }}
               >
                 {item.label}
                 {isActive && (
                   <span
                     className="absolute bottom-0 left-0 right-0 h-0.5 rounded-full"
-                    style={{ backgroundColor: "#f97316" }}
+                    style={{ backgroundColor: "#c55a11" }}
                   />
                 )}
               </button>

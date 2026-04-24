@@ -3,12 +3,12 @@ export default function BottomBar() {
     <footer
       className="w-full py-4 text-center text-xs font-medium tracking-widest"
       style={{
-        backgroundColor: "#131d2e",
-        color: "#64748b",
-        borderTop: "1px solid #2c3a52",
+        backgroundColor: "#f8fbff",
+        color: "#7a8798",
+        borderTop: "1px solid #d8e1ec",
       }}
     >
-      COPYRIGHT 2026 © PARCEL HUB
+      COPYRIGHT 2026 © PARCEL POINT
     </footer>
   );
 }

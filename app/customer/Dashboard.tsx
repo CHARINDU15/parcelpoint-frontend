@@ -13,7 +13,12 @@ import {
   type DashboardShipmentData,
   type ShipmentCustomerDetailsResponse,
 } from "@/lib/access-link";
-import { getStoredLinkToken, getStoredShipmentId, isOtpVerified } from "@/lib/customer-session";
+import {
+  getStoredLinkToken,
+  getStoredShipmentId,
+  isOtpVerified,
+  redirectToOtpPage,
+} from "@/lib/customer-session";
 
 const ORCHESTRATION_API_BASE =
   process.env.NEXT_PUBLIC_ORCHESTRATION_API_URL || "http://localhost:3002";
@@ -88,7 +93,11 @@ export default function Dashboard() {
         }
       );
 
-      const payload = (await response.json()) as ShipmentCustomerDetailsResponse;
+      const payload = (await response.json()) as ShipmentCustomerDetailsResponse & { code?: string };
+      if (payload.code === "OTP_EXPIRED" || payload.code === "OTP_REQUIRED") {
+        redirectToOtpPage();
+        return;
+      }
       if (!response.ok || !payload.success || !payload.data) {
         return;
       }
@@ -111,7 +120,7 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ backgroundColor: "#1a2332" }}>
+    <div className="min-h-screen flex flex-col">
       <TopBar onLogout={() => alert("Logged out")} />
       <NavBar activeTab={activeTab} onTabChange={setActiveTab} />
 
@@ -136,44 +145,44 @@ export default function Dashboard() {
             />
 
             <section className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
-              <div className="rounded-2xl bg-[#243044] p-5 sm:p-6">
-                <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-[#94a3b8]">
+              <div className="rounded-2xl border border-[#d8e1ec] bg-white p-5 sm:p-6 shadow-[0_18px_40px_rgba(15,23,42,0.05)]">
+                <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-[#7a8798]">
                   Shipment Details
                 </h3>
-                <div className="mt-4 space-y-3 text-sm text-[#e2e8f0]">
-                  <p><span className="text-[#94a3b8]">Shipment type:</span> {shipmentData.shipmentType}</p>
-                  <p><span className="text-[#94a3b8]">Service type:</span> {shipmentData.serviceType}</p>
-                  <p><span className="text-[#94a3b8]">Service indicator:</span> {shipmentData.serviceIndicator}</p>
-                  <p><span className="text-[#94a3b8]">Account number:</span> {shipmentData.accountNumber}</p>
+                <div className="mt-4 space-y-3 text-sm text-[#203142]">
+                  <p><span className="text-[#6b7b8d]">Shipment type:</span> {shipmentData.shipmentType}</p>
+                  <p><span className="text-[#6b7b8d]">Service type:</span> {shipmentData.serviceType}</p>
+                  <p><span className="text-[#6b7b8d]">Service indicator:</span> {shipmentData.serviceIndicator}</p>
+                  <p><span className="text-[#6b7b8d]">Account number:</span> {shipmentData.accountNumber}</p>
                 </div>
               </div>
 
-              <div className="rounded-2xl bg-[#243044] p-5 sm:p-6">
-                <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-[#94a3b8]">
+              <div className="rounded-2xl border border-[#d8e1ec] bg-white p-5 sm:p-6 shadow-[0_18px_40px_rgba(15,23,42,0.05)]">
+                <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-[#7a8798]">
                   Receiver
                 </h3>
-                <div className="mt-4 space-y-3 text-sm text-[#e2e8f0]">
-                  <p><span className="text-[#94a3b8]">Name:</span> {shipmentData.receiver}</p>
-                  <p><span className="text-[#94a3b8]">Mobile:</span> {shipmentData.receiverMobile}</p>
-                  <p><span className="text-[#94a3b8]">Email:</span> {shipmentData.receiverEmail}</p>
-                  <p><span className="text-[#94a3b8]">Address:</span> {shipmentData.deliveryAddress}</p>
+                <div className="mt-4 space-y-3 text-sm text-[#203142]">
+                  <p><span className="text-[#6b7b8d]">Name:</span> {shipmentData.receiver}</p>
+                  <p><span className="text-[#6b7b8d]">Mobile:</span> {shipmentData.receiverMobile}</p>
+                  <p><span className="text-[#6b7b8d]">Email:</span> {shipmentData.receiverEmail}</p>
+                  <p><span className="text-[#6b7b8d]">Address:</span> {shipmentData.deliveryAddress}</p>
                 </div>
               </div>
 
-              <div className="rounded-2xl bg-[#243044] p-5 sm:p-6">
-                <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-[#94a3b8]">
+              <div className="rounded-2xl border border-[#d8e1ec] bg-white p-5 sm:p-6 shadow-[0_18px_40px_rgba(15,23,42,0.05)]">
+                <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-[#7a8798]">
                   Sender
                 </h3>
-                <div className="mt-4 space-y-3 text-sm text-[#e2e8f0]">
-                  <p><span className="text-[#94a3b8]">Name:</span> {shipmentData.senderName}</p>
-                  <p><span className="text-[#94a3b8]">Mobile:</span> {shipmentData.senderMobile}</p>
-                  <p><span className="text-[#94a3b8]">Email:</span> {shipmentData.senderEmail}</p>
+                <div className="mt-4 space-y-3 text-sm text-[#203142]">
+                  <p><span className="text-[#6b7b8d]">Name:</span> {shipmentData.senderName}</p>
+                  <p><span className="text-[#6b7b8d]">Mobile:</span> {shipmentData.senderMobile}</p>
+                  <p><span className="text-[#6b7b8d]">Email:</span> {shipmentData.senderEmail}</p>
                 </div>
               </div>
             </section>
 
-            <section className="rounded-2xl bg-[#243044] p-5 sm:p-6">
-              <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-[#94a3b8]">
+            <section className="rounded-2xl border border-[#d8e1ec] bg-white p-5 sm:p-6 shadow-[0_18px_40px_rgba(15,23,42,0.05)]">
+              <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-[#7a8798]">
                 Packages
               </h3>
               <div className="mt-4 grid gap-3">
@@ -181,18 +190,18 @@ export default function Dashboard() {
                   shipmentData.packages.map((pkg) => (
                     <div
                       key={pkg.packageId}
-                      className="rounded-xl border border-[#2c3a52] bg-[#1a2332] p-4 text-sm text-[#e2e8f0]"
+                      className="rounded-xl border border-[#e2e8f0] bg-[#f8fbff] p-4 text-sm text-[#203142]"
                     >
-                      <p className="font-semibold text-[#f8fafc]">
+                      <p className="font-semibold text-[#132235]">
                         {pkg.packageId} {pkg.isPrimary ? "(Primary)" : ""}
                       </p>
-                      <p className="mt-1 text-[#94a3b8]">{pkg.description}</p>
-                      <p className="mt-2"><span className="text-[#94a3b8]">Weight:</span> {pkg.weight}</p>
-                      <p><span className="text-[#94a3b8]">Dimensions:</span> {pkg.dimensions}</p>
+                      <p className="mt-1 text-[#6b7b8d]">{pkg.description}</p>
+                      <p className="mt-2"><span className="text-[#6b7b8d]">Weight:</span> {pkg.weight}</p>
+                      <p><span className="text-[#6b7b8d]">Dimensions:</span> {pkg.dimensions}</p>
                     </div>
                   ))
                 ) : (
-                  <p className="text-sm text-[#94a3b8]">No package details available.</p>
+                  <p className="text-sm text-[#6b7b8d]">No package details available.</p>
                 )}
               </div>
             </section>

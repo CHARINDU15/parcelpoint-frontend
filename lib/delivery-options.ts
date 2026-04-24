@@ -1,6 +1,6 @@
 "use client";
 
-import { getStoredLinkToken } from "@/lib/customer-session";
+import { getStoredLinkToken, redirectToOtpPage } from "@/lib/customer-session";
 
 const ORCHESTRATION_API_BASE =
   process.env.NEXT_PUBLIC_ORCHESTRATION_API_URL || "http://localhost:3002";
@@ -47,6 +47,10 @@ export type DeliveryOptionPayload = {
 
 const parseJson = async (response: Response) => {
   const payload = await response.json();
+  if (payload?.code === "OTP_EXPIRED" || payload?.code === "OTP_REQUIRED") {
+    redirectToOtpPage();
+    throw new Error(payload.error || "OTP session expired");
+  }
   if (!response.ok || !payload.success) {
     throw new Error(payload.error || "Request failed");
   }

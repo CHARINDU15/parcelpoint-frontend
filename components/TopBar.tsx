@@ -11,20 +11,21 @@ export default function TopBar({ onLogout }: TopBarProps) {
     <header
       className="w-full sticky top-0 z-50"
       style={{
-        backgroundColor: "#1a2332",
-        borderBottom: "1px solid #2c3a52",
-        backdropFilter: "blur(8px)",
+        backgroundColor: "rgba(248, 251, 255, 0.92)",
+        borderBottom: "1px solid #d8e1ec",
+        backdropFilter: "blur(14px)",
       }}
     >
       <div className="max-w-6xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
-        {/* Logo */}
-        <div className="flex items-center gap-2">
-          
+        <div className="flex items-center gap-3">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#132235] text-xs font-black tracking-[0.2em] text-white">
+            PP
+          </div>
           <span
             className="text-lg font-bold tracking-wide"
-            style={{ color: "#f1f5f9", letterSpacing: "0.06em" }}
+            style={{ color: "#132235", letterSpacing: "0.06em" }}
           >
-            PARCEL <span style={{ color: "#f97316" }}>HUB</span>
+            Parcel <span style={{ color: "#c55a11" }}>Point</span>
           </span>
         </div>
 
@@ -32,10 +33,10 @@ export default function TopBar({ onLogout }: TopBarProps) {
         <button
           onClick={onLogout}
           className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 hover:opacity-80"
-          style={{ color: "#94a3b8" }}
+          style={{ color: "#526277" }}
         >
           <LogOut size={16} />
-          <span className="hidden sm:inline">log out</span>
+          <span className="hidden sm:inline">Log out</span>
         </button>
       </div>
     </header>
