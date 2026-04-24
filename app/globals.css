@@ -7,6 +7,7 @@
   --accent-orange: #c55a11;
   --accent-orange-hover: #9a430d;
   --accent-green: #0f766e;
+  --accent-blue: #0f548c;
   --text-primary: #132235;
   --text-secondary: #526277;
   --text-muted: #7a8798;
@@ -21,10 +22,30 @@
 body {
   background:
     radial-gradient(circle at top right, rgba(197, 90, 17, 0.08), transparent 22%),
+    radial-gradient(circle at top left, rgba(15, 84, 140, 0.06), transparent 20%),
     linear-gradient(180deg, #f8fbff 0%, #eef3f9 100%);
   color: var(--text-primary);
   font-family: var(--font-sora), 'Segoe UI', sans-serif;
   min-height: 100vh;
+}
+
+.surface-card {
+  background: rgba(255, 255, 255, 0.88);
+  border: 1px solid rgba(216, 225, 236, 0.95);
+  box-shadow: 0 22px 48px rgba(15, 23, 42, 0.06);
+  backdrop-filter: blur(18px);
+}
+
+.hero-panel {
+  background:
+    linear-gradient(135deg, rgba(16, 35, 60, 0.96) 0%, rgba(34, 70, 109, 0.9) 100%);
+  box-shadow: 0 28px 70px rgba(16, 35, 60, 0.24);
+}
+
+.soft-panel {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.96) 0%, rgba(246, 250, 254, 0.96) 100%);
+  border: 1px solid rgba(216, 225, 236, 0.95);
+  box-shadow: 0 16px 36px rgba(15, 23, 42, 0.05);
 }
 
 /* Toggle Switch */

@@ -128,7 +128,14 @@ export default function Dashboard() {
         {activeTab === "My Shipment" && (
           <>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-              <ShipmentCard {...shipmentData} />
+              <ShipmentCard
+                {...shipmentData}
+                shipmentType={shipmentData.shipmentType}
+                serviceType={shipmentData.serviceType}
+                senderName={shipmentData.senderName}
+                managementDeadline={shipmentData.managementDeadline}
+                packages={shipmentData.packages}
+              />
               <NotificationsCard
                 key={`${shipmentData.receiverEmail}-${shipmentData.receiverMobile}-${shipmentData.preferredNotificationChannel}`}
                 mobileNumber={shipmentData.receiverMobile}
@@ -209,169 +216,195 @@ export default function Dashboard() {
         )}
 
         {activeTab === "Contact Hub" && (
-          <div className="py-12 flex flex-col items-center">
-            <h2 className="text-2xl font-bold text-center text-[#f1f5f9]">Contact Hub</h2>
-            <p className="mt-2 text-center text-sm text-[#94a3b8]">
-              We&apos;re here to help - reach out anytime.
-            </p>
+          <div className="flex flex-col gap-6 py-8">
+            <section className="hero-panel relative overflow-hidden rounded-[32px] px-6 py-8 text-white sm:px-10 sm:py-10">
+              <div className="absolute -right-16 top-0 h-40 w-40 rounded-full bg-white/8 blur-3xl" />
+              <div className="absolute bottom-0 left-0 h-32 w-32 rounded-full bg-[#c55a11]/20 blur-3xl" />
+              <div className="relative max-w-3xl">
+                <p className="text-xs font-semibold uppercase tracking-[0.24em] text-white/65">Contact Hub</p>
+                <h2 className="mt-3 text-3xl font-bold sm:text-4xl">Reach the ParcelPoint support team</h2>
+                <p className="mt-3 max-w-2xl text-sm leading-7 text-white/78 sm:text-base">
+                  Get help with delivery changes, shipment visibility, and service questions through a cleaner support experience.
+                </p>
+              </div>
+            </section>
 
-            <form className="mt-8 w-full max-w-xl space-y-4 bg-[#243044] p-6 rounded-xl">
-              <div>
-                <label className="block text-sm font-medium text-[#f1f5f9]">Your Name</label>
-                <input
-                  type="text"
-                  className="mt-1 w-full rounded bg-[#1a2332] border border-[#2c3a52] px-3 py-2 text-sm text-[#f1f5f9]"
-                  placeholder="John Doe"
-                />
+            <section className="grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
+              <div className="surface-card rounded-[28px] p-6 sm:p-8">
+                <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-[#7a8798]">
+                  Support Channels
+                </h3>
+                <div className="mt-5 grid gap-4">
+                  <div className="soft-panel rounded-2xl p-4">
+                    <p className="text-xs uppercase tracking-[0.18em] text-[#7a8798]">Customer Care</p>
+                    <p className="mt-2 text-lg font-semibold text-[#132235]">+94 11 234 5678</p>
+                    <p className="mt-1 text-sm text-[#526277]">Weekdays 8:30 AM to 6:00 PM</p>
+                  </div>
+                  <div className="soft-panel rounded-2xl p-4">
+                    <p className="text-xs uppercase tracking-[0.18em] text-[#7a8798]">Email Support</p>
+                    <p className="mt-2 text-lg font-semibold text-[#132235]">support@parcelpoint.com</p>
+                    <p className="mt-1 text-sm text-[#526277]">For tracking, billing, and delivery option support</p>
+                  </div>
+                  <div className="soft-panel rounded-2xl p-4">
+                    <p className="text-xs uppercase tracking-[0.18em] text-[#7a8798]">Response Target</p>
+                    <p className="mt-2 text-lg font-semibold text-[#132235]">Within 1 business day</p>
+                    <p className="mt-1 text-sm text-[#526277]">Priority issues are reviewed faster</p>
+                  </div>
+                </div>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-[#f1f5f9]">Email Address</label>
-                <input
-                  type="email"
-                  className="mt-1 w-full rounded bg-[#1a2332] border border-[#2c3a52] px-3 py-2 text-sm text-[#f1f5f9]"
-                  placeholder="you@example.com"
-                />
-              </div>
+              <form className="surface-card rounded-[28px] p-6 sm:p-8">
+                <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-[#7a8798]">
+                  Send a Message
+                </h3>
+                <div className="mt-5 space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-[#203142]">Your Name</label>
+                    <input
+                      type="text"
+                      className="mt-2 w-full rounded-2xl border border-[#d8e1ec] bg-[#fbfdff] px-4 py-3 text-sm text-[#132235] outline-none transition focus:border-[#c55a11]"
+                      placeholder="John Doe"
+                    />
+                  </div>
 
-              <div>
-                <label className="block text-sm font-medium text-[#f1f5f9]">Message</label>
-                <textarea
-                  className="mt-1 w-full rounded bg-[#1a2332] border border-[#2c3a52] px-3 py-2 text-sm text-[#f1f5f9]"
-                  rows={4}
-                  placeholder="How can we help?"
-                />
-              </div>
+                  <div>
+                    <label className="block text-sm font-medium text-[#203142]">Email Address</label>
+                    <input
+                      type="email"
+                      className="mt-2 w-full rounded-2xl border border-[#d8e1ec] bg-[#fbfdff] px-4 py-3 text-sm text-[#132235] outline-none transition focus:border-[#c55a11]"
+                      placeholder="you@example.com"
+                    />
+                  </div>
 
-              <button
-                type="submit"
-                className="w-full py-2 bg-[#f97316] rounded text-black font-semibold hover:bg-[#fb923c] transition"
-              >
-                Send Message
-              </button>
-            </form>
+                  <div>
+                    <label className="block text-sm font-medium text-[#203142]">Message</label>
+                    <textarea
+                      className="mt-2 w-full rounded-2xl border border-[#d8e1ec] bg-[#fbfdff] px-4 py-3 text-sm text-[#132235] outline-none transition focus:border-[#c55a11]"
+                      rows={5}
+                      placeholder="Tell us what you need help with"
+                    />
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  className="mt-6 w-full rounded-full bg-[#132235] py-3 text-sm font-semibold text-white transition hover:bg-[#0d1a2b]"
+                >
+                  Send Message
+                </button>
+              </form>
+            </section>
           </div>
         )}
 
         {activeTab === "About Hub" && (
-          <div className="flex flex-col gap-20 py-16">
-            <div className="text-center max-w-3xl mx-auto">
-              <h1 className="text-3xl sm:text-4xl font-bold text-[#f1f5f9]">About Parcel Hub</h1>
-              <p className="mt-4 text-[#94a3b8] text-sm sm:text-base">
-                Parcel Hub is a modern parcel delivery platform designed to make shipping simple,
-                secure, and reliable across Sri Lanka.
-              </p>
-            </div>
+          <div className="flex flex-col gap-8 py-8">
+            <section className="hero-panel relative overflow-hidden rounded-[32px] px-6 py-8 text-white sm:px-10 sm:py-12">
+              <div className="absolute right-0 top-0 h-44 w-44 rounded-full bg-white/10 blur-3xl" />
+              <div className="relative max-w-3xl">
+                <p className="text-xs font-semibold uppercase tracking-[0.24em] text-white/65">About ParcelPoint</p>
+                <h1 className="mt-3 text-3xl font-bold sm:text-5xl">Clean logistics, visible progress, reliable delivery.</h1>
+                <p className="mt-4 max-w-2xl text-sm leading-7 text-white/78 sm:text-base">
+                  ParcelPoint is built to give customers confidence during the last-mile journey with secure access, clear delivery options, and modern tracking.
+                </p>
+              </div>
+            </section>
 
-            <div className="flex justify-center">
+            <section className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
               <div
-                className="w-full max-w-4xl h-64 sm:h-80 rounded-3xl overflow-hidden shadow-2xl relative"
+                className="surface-card relative min-h-[280px] overflow-hidden rounded-[28px]"
                 style={{
-                  backgroundImage: "url('/background.jpg')",
+                  backgroundImage:
+                    "linear-gradient(135deg, rgba(16,35,60,0.72) 0%, rgba(34,70,109,0.58) 100%), url('/background.jpg')",
                   backgroundSize: "cover",
                   backgroundPosition: "center",
                 }}
               >
-                <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
-                  <h2 className="text-2xl sm:text-3xl font-bold text-white text-center px-4">
-                    Delivering Happiness Across Sri Lanka
-                  </h2>
+                <div className="flex h-full items-end p-8">
+                  <div className="max-w-2xl text-white">
+                    <p className="text-xs font-semibold uppercase tracking-[0.22em] text-white/65">Our Promise</p>
+                    <h2 className="mt-3 text-2xl font-bold sm:text-3xl">Delivering confidence across Sri Lanka</h2>
+                    <p className="mt-3 text-sm leading-7 text-white/78">
+                      Every screen is designed to reduce uncertainty and give customers a smoother, more trustworthy delivery experience.
+                    </p>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <div>
-              <h2 className="text-center text-2xl font-bold text-[#f1f5f9]">Our Services</h2>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-10">
-                <div className="bg-[#243044] p-6 rounded-xl text-center">
-                  Parcel Delivery
-                  <p className="text-sm text-[#94a3b8] mt-2">
-                    Reliable islandwide parcel transportation with safe handling.
-                  </p>
-                </div>
-
-                <div className="bg-[#243044] p-6 rounded-xl text-center">
-                  Express Shipping
-                  <p className="text-sm text-[#94a3b8] mt-2">
-                    Fast delivery services for urgent shipments.
-                  </p>
-                </div>
-
-                <div className="bg-[#243044] p-6 rounded-xl text-center">
-                  Real-Time Tracking
-                  <p className="text-sm text-[#94a3b8] mt-2">
-                    Monitor your parcel location anytime.
-                  </p>
+              <div className="surface-card rounded-[28px] p-6 sm:p-8">
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#7a8798]">What We Focus On</p>
+                <div className="mt-5 space-y-4">
+                  <div className="soft-panel rounded-2xl p-4">
+                    <p className="font-semibold text-[#132235]">Secure customer access</p>
+                    <p className="mt-2 text-sm leading-6 text-[#526277]">Token access and OTP verification keep shipment actions protected.</p>
+                  </div>
+                  <div className="soft-panel rounded-2xl p-4">
+                    <p className="font-semibold text-[#132235]">Flexible delivery control</p>
+                    <p className="mt-2 text-sm leading-6 text-[#526277]">Customers can adapt delivery with clearer options and nearby collection visibility.</p>
+                  </div>
+                  <div className="soft-panel rounded-2xl p-4">
+                    <p className="font-semibold text-[#132235]">Transparent progress</p>
+                    <p className="mt-2 text-sm leading-6 text-[#526277]">Tracking and package summaries help users understand what is happening next.</p>
+                  </div>
                 </div>
               </div>
-            </div>
+            </section>
 
-            <div>
-              <h2 className="text-center text-2xl font-bold text-[#f1f5f9]">Our Core Values</h2>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-10">
-                <div className="bg-[#243044] p-6 rounded-xl text-center">
-                  Security
-                  <p className="text-sm text-[#94a3b8] mt-2">
-                    Every parcel is protected with secure logistics operations.
-                  </p>
-                </div>
-
-                <div className="bg-[#243044] p-6 rounded-xl text-center">
-                  Efficiency
-                  <p className="text-sm text-[#94a3b8] mt-2">
-                    Optimized delivery routes for faster shipping.
-                  </p>
-                </div>
-
-                <div className="bg-[#243044] p-6 rounded-xl text-center">
-                  Trust
-                  <p className="text-sm text-[#94a3b8] mt-2">
-                    Building long-term relationships with customers and partners.
-                  </p>
-                </div>
+            <section className="grid gap-6 md:grid-cols-3">
+              <div className="surface-card rounded-[28px] p-6 text-center">
+                <h2 className="text-xl font-bold text-[#132235]">Parcel Delivery</h2>
+                <p className="mt-3 text-sm leading-6 text-[#526277]">
+                  Reliable islandwide parcel transportation with controlled handoff points.
+                </p>
               </div>
-            </div>
+              <div className="surface-card rounded-[28px] p-6 text-center">
+                <h2 className="text-xl font-bold text-[#132235]">Express Shipping</h2>
+                <p className="mt-3 text-sm leading-6 text-[#526277]">
+                  Faster service options for urgent shipments and time-sensitive deliveries.
+                </p>
+              </div>
+              <div className="surface-card rounded-[28px] p-6 text-center">
+                <h2 className="text-xl font-bold text-[#132235]">Real-Time Tracking</h2>
+                <p className="mt-3 text-sm leading-6 text-[#526277]">
+                  More visible shipment progress with delivery preference context built in.
+                </p>
+              </div>
+            </section>
 
-            <div className="bg-[#243044] p-10 rounded-3xl shadow-xl">
-              <h2 className="text-2xl font-bold text-[#f1f5f9] text-center">Our Team</h2>
-
-              <p className="mt-6 text-center text-sm text-[#cbd5e1] max-w-3xl mx-auto leading-relaxed">
-                Our team consists of logistics specialists, technology experts, and customer
-                support professionals dedicated to providing the best parcel delivery experience.
-                We continuously innovate our platform to improve delivery speed, transparency, and
-                customer satisfaction.
+            <section className="surface-card rounded-[32px] p-8 sm:p-10">
+              <h2 className="text-center text-2xl font-bold text-[#132235]">Our Team</h2>
+              <p className="mx-auto mt-5 max-w-3xl text-center text-sm leading-7 text-[#526277]">
+                Our team combines logistics operations, product design, and engineering to make shipment management feel simple, polished, and dependable for every customer.
               </p>
-            </div>
+            </section>
           </div>
         )}
 
         {activeTab === "FAQs" && (
-          <div className="py-16 max-w-3xl mx-auto w-full">
-            <div className="text-center mb-10">
-              <h2 className="text-3xl font-bold text-[#f1f5f9]">Frequently Asked Questions</h2>
-              <p className="mt-3 text-sm text-[#94a3b8]">
-                Find answers to common questions about Parcel Hub services.
+          <div className="py-8 max-w-4xl mx-auto w-full">
+            <div className="hero-panel rounded-[32px] px-6 py-8 text-center text-white sm:px-10 sm:py-10">
+              <h2 className="text-3xl font-bold">Frequently Asked Questions</h2>
+              <p className="mt-3 text-sm text-white/78 sm:text-base">
+                Find quick answers about shipment access, tracking, and delivery options.
               </p>
             </div>
 
-            <div className="space-y-4">
+            <div className="mt-6 space-y-4">
               {faqData.map((faq, index) => (
                 <div
                   key={index}
-                  className="bg-[#243044] rounded-xl border border-[#2c3a52] overflow-hidden"
+                  className="surface-card overflow-hidden rounded-[24px]"
                 >
                   <button
                     onClick={() => toggleFAQ(index)}
-                    className="w-full flex justify-between items-center px-5 py-4 text-left text-[#f1f5f9] font-medium"
+                    className="flex w-full items-center justify-between px-5 py-5 text-left font-medium text-[#132235]"
                   >
                     {faq.question}
-                    <span className="text-[#f97316] text-xl">{openFAQ === index ? "-" : "+"}</span>
+                    <span className="text-[#c55a11] text-xl">{openFAQ === index ? "-" : "+"}</span>
                   </button>
 
                   {openFAQ === index && (
-                    <div className="px-5 pb-4 text-sm text-[#cbd5e1] leading-relaxed">
+                    <div className="px-5 pb-5 text-sm leading-7 text-[#526277]">
                       {faq.answer}
                     </div>
                   )}

@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { createPortal } from "react-dom";
 import { submitDeliveryOption } from "@/lib/delivery-options";
+import ModalFrame from "@/components/ModalFrame";
 
 interface AlternateAddressModalProps {
   isOpen: boolean;
@@ -53,8 +53,6 @@ export default function AlternateAddressModal({
     };
   }, [isOpen]);
 
-  if (!isOpen || !mounted) return null;
-
   const handleChange = (key: keyof typeof form, value: string) => {
     setForm((prev) => ({ ...prev, [key]: value }));
   };
@@ -90,54 +88,53 @@ export default function AlternateAddressModal({
     }
   };
 
-  return createPortal(
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative w-full max-w-xl rounded-[32px] bg-white shadow-2xl">
-        <div className="flex items-center justify-between border-b px-8 py-6">
-          <h3 className="text-xl font-bold text-slate-900">Alternate Address</h3>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-600">×</button>
+  return (
+    <ModalFrame
+      isOpen={isOpen}
+      mounted={mounted}
+      onClose={onClose}
+      title="Alternate Address"
+      subtitle="Update the destination address for this shipment before the deadline."
+      maxWidthClass="max-w-2xl"
+      footer={
+        <button
+          onClick={handleSubmit}
+          disabled={submitting}
+          className="w-full rounded-full bg-[#ff6b35] px-10 py-3.5 font-bold text-white transition hover:bg-[#e85a20] disabled:opacity-50"
+        >
+          {submitting ? "Saving..." : "Save Alternate Address"}
+        </button>
+      }
+    >
+      <div className="space-y-5">
+        <div className="rounded-2xl bg-[#1e293b] p-5 text-white">
+          <p className="text-[11px] uppercase tracking-[0.2em] text-slate-400">Current Delivery Address</p>
+          <p className="mt-1 text-sm font-semibold">{deliveryAddress}</p>
         </div>
 
-        <div className="space-y-5 px-8 py-6">
-          <div className="rounded-2xl bg-[#1e293b] p-5 text-white">
-            <p className="text-[11px] uppercase tracking-[0.2em] text-slate-400">Current Delivery Address</p>
-            <p className="mt-1 text-sm font-semibold">{deliveryAddress}</p>
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <input className="col-span-2 rounded-xl border border-slate-200 p-3.5 text-sm outline-none focus:border-orange-500" placeholder="Address Line 01 *" value={form.address1} onChange={(e) => handleChange("address1", e.target.value)} />
-            <input className="col-span-2 rounded-xl border border-slate-200 p-3.5 text-sm outline-none focus:border-orange-500" placeholder="Address Line 02" value={form.address2} onChange={(e) => handleChange("address2", e.target.value)} />
-            <input className="rounded-xl border border-slate-200 p-3.5 text-sm outline-none focus:border-orange-500" placeholder="Postal Code *" value={form.postcode} onChange={(e) => handleChange("postcode", e.target.value)} />
-            <input className="rounded-xl border border-slate-200 p-3.5 text-sm outline-none focus:border-orange-500" placeholder="City *" value={form.city} onChange={(e) => handleChange("city", e.target.value)} />
-            <input className="rounded-xl border border-slate-200 p-3.5 text-sm outline-none focus:border-orange-500" placeholder="Suburb *" value={form.suburb} onChange={(e) => handleChange("suburb", e.target.value)} />
-            <input className="rounded-xl border border-slate-200 p-3.5 text-sm outline-none focus:border-orange-500" placeholder="State / Province *" value={form.state} onChange={(e) => handleChange("state", e.target.value)} />
-            <input className="col-span-2 rounded-xl border border-slate-200 p-3.5 text-sm outline-none focus:border-orange-500" placeholder="Country Code *" value={form.country} onChange={(e) => handleChange("country", e.target.value.toUpperCase())} />
-          </div>
-
-          <div className="relative">
-            <textarea
-              value={form.additionalInfo}
-              onChange={(e) => handleChange("additionalInfo", e.target.value)}
-              maxLength={300}
-              placeholder="Additional instructions"
-              className="h-28 w-full resize-none rounded-xl border border-slate-200 p-4 text-sm outline-none focus:border-orange-500"
-            />
-            <span className="absolute bottom-3 right-4 text-xs text-slate-400">{form.additionalInfo.length}/300</span>
-          </div>
-
-          {error ? <p className="text-sm font-medium text-red-500">{error}</p> : null}
-
-          <button
-            onClick={handleSubmit}
-            disabled={submitting}
-            className="w-full rounded-full bg-[#ff6b35] px-10 py-3.5 font-bold text-white transition hover:bg-[#e85a20] disabled:opacity-50"
-          >
-            {submitting ? "Saving..." : "Save Alternate Address"}
-          </button>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <input className="sm:col-span-2 rounded-xl border border-slate-200 p-3.5 text-sm outline-none focus:border-orange-500" placeholder="Address Line 01 *" value={form.address1} onChange={(e) => handleChange("address1", e.target.value)} />
+          <input className="sm:col-span-2 rounded-xl border border-slate-200 p-3.5 text-sm outline-none focus:border-orange-500" placeholder="Address Line 02" value={form.address2} onChange={(e) => handleChange("address2", e.target.value)} />
+          <input className="rounded-xl border border-slate-200 p-3.5 text-sm outline-none focus:border-orange-500" placeholder="Postal Code *" value={form.postcode} onChange={(e) => handleChange("postcode", e.target.value)} />
+          <input className="rounded-xl border border-slate-200 p-3.5 text-sm outline-none focus:border-orange-500" placeholder="City *" value={form.city} onChange={(e) => handleChange("city", e.target.value)} />
+          <input className="rounded-xl border border-slate-200 p-3.5 text-sm outline-none focus:border-orange-500" placeholder="Suburb *" value={form.suburb} onChange={(e) => handleChange("suburb", e.target.value)} />
+          <input className="rounded-xl border border-slate-200 p-3.5 text-sm outline-none focus:border-orange-500" placeholder="State / Province *" value={form.state} onChange={(e) => handleChange("state", e.target.value)} />
+          <input className="sm:col-span-2 rounded-xl border border-slate-200 p-3.5 text-sm outline-none focus:border-orange-500" placeholder="Country Code *" value={form.country} onChange={(e) => handleChange("country", e.target.value.toUpperCase())} />
         </div>
+
+        <div className="relative">
+          <textarea
+            value={form.additionalInfo}
+            onChange={(e) => handleChange("additionalInfo", e.target.value)}
+            maxLength={300}
+            placeholder="Additional instructions"
+            className="h-28 w-full resize-none rounded-xl border border-slate-200 p-4 text-sm outline-none focus:border-orange-500"
+          />
+          <span className="absolute bottom-3 right-4 text-xs text-slate-400">{form.additionalInfo.length}/300</span>
+        </div>
+
+        {error ? <p className="text-sm font-medium text-red-500">{error}</p> : null}
       </div>
-    </div>,
-    document.body
+    </ModalFrame>
   );
 }

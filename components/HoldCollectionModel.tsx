@@ -25,6 +25,7 @@ export default function HoldCollectionModal({
   const [collectionDate, setCollectionDate] = useState("");
   const [additionalInfo, setAdditionalInfo] = useState("");
   const [radiusKm, setRadiusKm] = useState(6);
+  const [searchCenter, setSearchCenter] = useState<{ lat: number; lng: number } | null>(null);
   const [locations, setLocations] = useState<NearbyParcelPoint[]>([]);
   const [selectedLocationId, setSelectedLocationId] = useState("");
   const [loadingLocations, setLoadingLocations] = useState(false);
@@ -39,6 +40,7 @@ export default function HoldCollectionModal({
     setCollectionDate("");
     setAdditionalInfo("");
     setRadiusKm(6);
+    setSearchCenter(null);
     setLocations([]);
     setSelectedLocationId("");
     setError("");
@@ -54,8 +56,12 @@ export default function HoldCollectionModal({
   );
 
   const mapQuery = encodeURIComponent(
-    selectedLocation
+    selectedLocation?.latitude != null && selectedLocation?.longitude != null
+      ? `${selectedLocation.latitude},${selectedLocation.longitude}`
+      : selectedLocation
       ? `${selectedLocation.name} ${selectedLocation.address || selectedLocation.location || ""}`
+      : searchCenter
+      ? `${searchCenter.lat},${searchCenter.lng}`
       : "Sri Lanka ParcelPoint"
   );
 
@@ -73,6 +79,10 @@ export default function HoldCollectionModal({
     navigator.geolocation.getCurrentPosition(
       async (position) => {
         try {
+          setSearchCenter({
+            lat: position.coords.latitude,
+            lng: position.coords.longitude,
+          });
           const results = await fetchNearbyParcelPoints(
             position.coords.latitude,
             position.coords.longitude,
@@ -88,7 +98,7 @@ export default function HoldCollectionModal({
       },
       () => {
         setLoadingLocations(false);
-        setError("Location permission is needed only when you choose `Use My Location`.");
+        setError("Location permission is requested only after you choose Use My Location.");
       }
     );
   };
@@ -135,20 +145,27 @@ export default function HoldCollectionModal({
           <div>
             <h3 className="text-lg font-bold text-[#132235] sm:text-xl">Hold For Collection</h3>
             <p className="mt-1 text-xs text-[#6b7b8d]">
-              Pick a collection point, choose a date, and save the hold request.
+              Choose a collection location, select a date, and confirm the hold request.
             </p>
           </div>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-600">×</button>
+          <button
+            onClick={onClose}
+            className="rounded-full p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
+            aria-label="Close modal"
+          >
+            ×
+          </button>
         </div>
 
         <div className="grid gap-5 p-5 sm:grid-cols-[1.1fr_0.9fr] sm:p-8">
           <div className="space-y-5">
-            <div className="rounded-2xl border border-[#e2e8f0] bg-[#f8fbff] p-4">
+            <div className="rounded-3xl border border-[#d8e3ee] bg-[linear-gradient(135deg,#f8fbff_0%,#eef4fb_100%)] p-4 sm:p-5">
               <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                 <div>
                   <p className="text-sm font-semibold text-[#132235]">Search nearby collection points</p>
-                  <p className="mt-1 text-xs text-[#6b7b8d]">
-                    Choose a distance between 2 km and 10 km before loading locations.
+                  <p className="mt-1 text-sm text-[#526277]">
+                    Active radius: <span className="font-bold text-[#0f548c]">{radiusKm} km</span>.
+                    You can search from 2 km up to 10 km before loading nearby locations.
                   </p>
                 </div>
                 <button
@@ -166,16 +183,44 @@ export default function HoldCollectionModal({
                     key={value}
                     type="button"
                     onClick={() => setRadiusKm(value)}
-                    className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${
+                    className={`rounded-full border px-3 py-1.5 text-xs font-semibold transition ${
                       radiusKm === value
-                        ? "bg-[#c55a11] text-white"
-                        : "bg-white text-[#526277] border border-[#d8e1ec]"
+                        ? "border-[#c55a11] bg-[#c55a11] text-white"
+                        : "border-[#d8e1ec] bg-white text-[#526277]"
                     }`}
                   >
                     {value} km
                   </button>
                 ))}
               </div>
+
+              {searchCenter ? (
+                <div className="mt-4 rounded-2xl border border-[#b7d5f0] bg-[#edf6ff] p-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <p className="text-sm font-semibold text-[#0f548c]">My current location</p>
+                      <p className="mt-1 text-xs text-[#4d6a85]">
+                        Nearby collection points are measured from this location within {radiusKm} km.
+                      </p>
+                    </div>
+                    <span className="rounded-full bg-[#0f548c] px-3 py-1 text-[11px] font-bold uppercase tracking-[0.16em] text-white">
+                      You
+                    </span>
+                  </div>
+                  <p className="mt-3 text-xs text-[#4d6a85]">
+                    {searchCenter.lat.toFixed(5)}, {searchCenter.lng.toFixed(5)}
+                  </p>
+                </div>
+              ) : null}
+            </div>
+
+            <div>
+              <p className="text-sm font-semibold text-[#132235]">Available collection points</p>
+              <p className="mt-1 text-xs text-[#6b7b8d]">
+                {locations.length > 0
+                  ? `${locations.length} collection point${locations.length > 1 ? "s" : ""} found within ${radiusKm} km.`
+                  : "Use your current location to load nearby collection points and compare their distance."}
+              </p>
             </div>
 
             <div className="grid gap-3">
@@ -196,13 +241,33 @@ export default function HoldCollectionModal({
                       checked={selectedLocationId === String(location.id)}
                       onChange={() => setSelectedLocationId(String(location.id))}
                     />
-                    <p className="font-semibold text-[#132235]">{location.name}</p>
-                    <p className="mt-1 text-sm text-[#526277]">
-                      {location.address || location.location || "No address available"}
-                    </p>
-                    <p className="mt-2 text-xs text-[#7a8798]">
-                      {location.distance_km ? `${location.distance_km.toFixed(1)} km away` : "Distance unavailable"}
-                    </p>
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="min-w-0">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <p className="font-semibold text-[#132235]">{location.name}</p>
+                          {location.distance_km != null ? (
+                            <span className="rounded-full bg-[#edf6ff] px-2.5 py-1 text-[11px] font-bold text-[#0f548c]">
+                              {location.distance_km.toFixed(1)} km
+                            </span>
+                          ) : null}
+                        </div>
+                        <p className="mt-1 text-sm text-[#526277]">
+                          {location.address || location.location || "No address available"}
+                        </p>
+                        <div className="mt-2 flex flex-wrap gap-2 text-xs text-[#7a8798]">
+                          <span>{location.branch_code || location.code || "Branch code unavailable"}</span>
+                          <span>•</span>
+                          <span>
+                            {location.distance_km != null
+                              ? `${location.distance_km.toFixed(1)} km away`
+                              : "Distance unavailable"}
+                          </span>
+                        </div>
+                      </div>
+                      <span className="rounded-full bg-[#132235] px-2.5 py-1 text-[11px] font-bold text-white">
+                        {location.code || location.branch_code || "PP"}
+                      </span>
+                    </div>
                   </label>
                 ))
               ) : (
@@ -240,7 +305,7 @@ export default function HoldCollectionModal({
               <div className="border-b border-[#e2e8f0] px-4 py-3">
                 <p className="text-sm font-semibold text-[#132235]">Google Maps Preview</p>
                 <p className="mt-1 text-xs text-[#6b7b8d]">
-                  Review the selected collection point on the map.
+                  Preview updates for the selected collection point. Your current location is surfaced separately in blue above.
                 </p>
               </div>
               <iframe
@@ -254,10 +319,22 @@ export default function HoldCollectionModal({
 
             {selectedLocation ? (
               <div className="rounded-2xl border border-[#d8e1ec] bg-[#f8fbff] p-4">
-                <p className="text-sm font-semibold text-[#132235]">{selectedLocation.name}</p>
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <p className="text-sm font-semibold text-[#132235]">{selectedLocation.name}</p>
+                  <span className="rounded-full bg-[#fff0e5] px-2.5 py-1 text-[11px] font-bold text-[#c55a11]">
+                    Selected collection point
+                  </span>
+                </div>
                 <p className="mt-1 text-sm text-[#526277]">
                   {selectedLocation.address || selectedLocation.location || "No address available"}
                 </p>
+                <div className="mt-3 flex flex-wrap gap-2 text-xs text-[#6b7b8d]">
+                  <span>Radius: {radiusKm} km</span>
+                  <span>•</span>
+                  <span>
+                    Distance: {selectedLocation.distance_km != null ? `${selectedLocation.distance_km.toFixed(1)} km` : "Unavailable"}
+                  </span>
+                </div>
                 <a
                   href={`https://www.google.com/maps/search/?api=1&query=${mapQuery}`}
                   target="_blank"

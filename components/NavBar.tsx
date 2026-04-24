@@ -22,27 +22,30 @@ export default function NavBar({ activeTab = "My Shipment", onTabChange }: NavBa
     <nav
       className="w-full"
       style={{
-        backgroundColor: "rgba(255, 255, 255, 0.78)",
-        borderBottom: "1px solid #d8e1ec",
+        backgroundColor: "rgba(255, 255, 255, 0.68)",
+        borderBottom: "1px solid rgba(216, 225, 236, 0.85)",
+        backdropFilter: "blur(14px)",
       }}
     >
-      <div className="max-w-6xl mx-auto px-4 sm:px-6">
-        <div className="flex items-center gap-1 overflow-x-auto scrollbar-hide">
+      <div className="max-w-6xl mx-auto px-4 py-2 sm:px-6">
+        <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide rounded-full border border-[#dde6ef] bg-white/80 p-1.5 shadow-[0_14px_32px_rgba(15,23,42,0.04)]">
           {navItems.map((item) => {
             const isActive = activeTab === item.label;
             return (
               <button
                 key={item.label}
                 onClick={() => onTabChange?.(item.label)}
-                className="relative px-4 py-3 text-sm font-medium whitespace-nowrap transition-all duration-200 flex-shrink-0"
+                className="relative flex-shrink-0 whitespace-nowrap rounded-full px-4 py-2.5 text-sm font-medium transition-all duration-200"
                 style={{
-                  color: isActive ? "#c55a11" : "#6b7b8d",
+                  color: isActive ? "#132235" : "#6b7b8d",
+                  background: isActive ? "linear-gradient(135deg, #fff4eb 0%, #fdf8f3 100%)" : "transparent",
+                  boxShadow: isActive ? "0 10px 22px rgba(197, 90, 17, 0.12)" : "none",
                 }}
               >
                 {item.label}
                 {isActive && (
                   <span
-                    className="absolute bottom-0 left-0 right-0 h-0.5 rounded-full"
+                    className="absolute inset-y-2 left-2 w-1 rounded-full"
                     style={{ backgroundColor: "#c55a11" }}
                   />
                 )}
