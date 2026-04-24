@@ -2,29 +2,51 @@
 
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
+import { fetchAvailableDeliveryDates, submitDeliveryOption } from "@/lib/delivery-options";
 
 interface ChangeDateModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onSuccess?: () => void | Promise<void>;
+  estimatedDelivery?: string;
+  deliveryAddress?: string;
 }
 
-export default function ChangeDateModal({ isOpen, onClose }: ChangeDateModalProps) {
+export default function ChangeDateModal({
+  isOpen,
+  onClose,
+  onSuccess,
+  estimatedDelivery = "N/A",
+  deliveryAddress = "N/A",
+}: ChangeDateModalProps) {
   const [mounted, setMounted] = useState(false);
-  // State for the new date input and text area
-  const [collectionDate, setCollectionDate] = useState("");
+  const [availableDates, setAvailableDates] = useState<string[]>([]);
+  const [deliveryDate, setDeliveryDate] = useState("");
   const [additionalInfo, setAdditionalInfo] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  // Prevent background scroll
   useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "unset";
-    }
+    if (!isOpen) return;
+
+    document.body.style.overflow = "hidden";
+    setError("");
+    setDeliveryDate("");
+    setAdditionalInfo("");
+
+    void (async () => {
+      try {
+        const dates = await fetchAvailableDeliveryDates();
+        setAvailableDates(dates);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed to load available dates");
+      }
+    })();
+
     return () => {
       document.body.style.overflow = "unset";
     };
@@ -32,116 +54,98 @@ export default function ChangeDateModal({ isOpen, onClose }: ChangeDateModalProp
 
   if (!isOpen || !mounted) return null;
 
-  const modalContent = (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
-      {/* Backdrop */}
-      <div 
-        className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300"
-        onClick={onClose}
-      />
+  const handleSubmit = async () => {
+    if (!deliveryDate) {
+      setError("Please select a new delivery date.");
+      return;
+    }
 
-      {/* Modal Container */}
-      <div className="relative bg-white rounded-[32px] w-full max-w-lg shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
-        
-        {/* Header */}
-        <div className="flex justify-between items-center px-8 pt-8 pb-4">
+    try {
+      setSubmitting(true);
+      setError("");
+
+      await submitDeliveryOption({
+        option: "CHANGE_DELIVERY_DATE",
+        deliveryDate,
+        additionalInfo,
+      });
+
+      await onSuccess?.();
+      onClose();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to update delivery date");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return createPortal(
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative w-full max-w-xl rounded-[32px] bg-white shadow-2xl">
+        <div className="flex items-center justify-between border-b px-8 py-6">
           <h3 className="text-xl font-bold text-slate-900">Change Delivery Date</h3>
-          <button 
-            onClick={onClose} 
-            className="text-slate-400 hover:text-slate-600 transition-colors p-1"
+          <button onClick={onClose} className="text-slate-400 hover:text-slate-600">×</button>
+        </div>
+
+        <div className="space-y-5 px-8 py-6">
+          <div className="rounded-2xl bg-[#1e293b] p-5 text-white">
+            <p className="text-[11px] uppercase tracking-[0.2em] text-slate-400">Estimated Delivery</p>
+            <p className="mt-1 font-semibold">{estimatedDelivery}</p>
+            <p className="mt-4 text-[11px] uppercase tracking-[0.2em] text-slate-400">Delivery Address</p>
+            <p className="mt-1 text-sm font-semibold">{deliveryAddress}</p>
+          </div>
+
+          <div>
+            <label className="mb-2 block text-sm font-semibold text-slate-800">
+              Select an available delivery date
+            </label>
+            <select
+              value={deliveryDate}
+              onChange={(e) => setDeliveryDate(e.target.value)}
+              className="w-full rounded-xl border border-slate-200 p-3.5 text-sm text-slate-700 outline-none focus:border-orange-500"
+            >
+              <option value="">Choose a date</option>
+              {availableDates.map((date) => (
+                <option key={date} value={date}>
+                  {new Date(date).toLocaleDateString("en-US", {
+                    weekday: "short",
+                    year: "numeric",
+                    month: "short",
+                    day: "numeric",
+                  })}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="relative">
+            <textarea
+              value={additionalInfo}
+              onChange={(e) => setAdditionalInfo(e.target.value)}
+              maxLength={300}
+              placeholder="Additional instructions"
+              className="h-32 w-full resize-none rounded-xl border border-slate-200 p-4 text-sm text-slate-700 outline-none focus:border-orange-500"
+            />
+            <span className="absolute bottom-3 right-4 text-xs text-slate-400">{additionalInfo.length}/300</span>
+          </div>
+
+          <div className="rounded-xl bg-orange-50 px-4 py-3 text-xs text-orange-900">
+            Only dates returned by `/api/delivery-options/available` are selectable here.
+          </div>
+
+          {error ? <p className="text-sm font-medium text-red-500">{error}</p> : null}
+
+          <button
+            onClick={handleSubmit}
+            disabled={submitting}
+            className="flex w-full items-center justify-center gap-2 rounded-full bg-[#ff6b35] px-10 py-3.5 font-bold text-white transition hover:bg-[#e85a20] disabled:opacity-50"
           >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="18" y1="6" x2="6" y2="18"></line>
-              <line x1="6" y1="6" x2="18" y2="18"></line>
-            </svg>
+            {submitting ? "Saving..." : "Save Delivery Date"}
           </button>
         </div>
-
-        <div className="px-8 pb-8 space-y-6">
-          {/* Status Card */}
-          <div className="bg-[#1e293b] p-6 rounded-2xl space-y-3">
-            <div>
-              <p className="text-[10px] uppercase tracking-wider text-slate-400 font-bold mb-1">
-                Estimated Delivery
-              </p>
-              <p className="font-bold text-sm text-white">
-                Mon, 21 Feb 2024
-              </p>
-            </div>
-            <div>
-              <p className="text-[10px] uppercase tracking-wider text-slate-400 font-bold mb-1">
-                Delivery Address
-              </p>
-              <p className="font-bold text-sm text-white leading-relaxed">
-                37 Vishwa, Katukurunda, 800, Sri Lanka
-              </p>
-            </div>
-          </div>
-
-          <div className="space-y-4">
-            <label className="block text-base font-bold text-slate-800">
-              Change the Date of Your Delivery
-            </label>
-
-            {/* Functional Date Input */}
-            <div className="relative">
-              <input
-                type="date"
-                value={collectionDate}
-                min={new Date().toISOString().split("T")[0]}
-                onChange={(e) => setCollectionDate(e.target.value)}
-                className="w-full border border-slate-200 rounded-xl px-4 py-4 text-sm outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 appearance-none bg-slate-50/50 text-slate-600"
-              />
-              <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
-                <svg
-                  className="w-5 h-5 text-slate-400"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.8"
-                  viewBox="0 0 24 24"
-                >
-                  <rect x="3" y="4" width="18" height="18" rx="2" />
-                  <path d="M16 2v4M8 2v4M3 10h18" strokeLinecap="round" />
-                </svg>
-              </div>
-            </div>
-
-            {/* Additional Info */}
-            <div className="relative">
-              <textarea
-                placeholder="Enter Additional Information"
-                value={additionalInfo}
-                onChange={(e) => setAdditionalInfo(e.target.value)}
-                className="w-full border border-slate-200 rounded-xl p-4 text-sm h-32 resize-none outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all text-slate-700 placeholder:text-slate-400 bg-slate-50/50"
-                maxLength={300}
-              />
-              <span className="absolute bottom-4 right-4 text-[11px] font-medium text-slate-400">
-                {additionalInfo.length}/300
-              </span>
-            </div>
-          </div>
-
-          {/* Business Days Notice */}
-          <div className="flex gap-3 text-xs text-slate-500 leading-snug">
-            <div className="w-5 h-5 rounded-full bg-slate-100 flex items-center justify-center shrink-0">
-              <span className="text-[10px] font-black text-slate-400">i</span>
-            </div>
-            <p>The new delivery date must be within 10 business days from the original date.</p>-
-          </div>
-
-          {/* Action Button */}
-          <div className="flex justify-end pt-2">
-            <button 
-              onClick={onClose}
-              className="w-full bg-[#ff6b35] hover:bg-[#e85a20] text-white font-bold py-3.5 px-10 rounded-full transition-all flex items-center justify-center gap-2 active:scale-95 shadow-lg shadow-orange-200"
-            >
-              Done <span className="text-xl font-light">›</span>
-            </button>
-          </div>
-        </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
-
-  return createPortal(modalContent, document.body);
 }

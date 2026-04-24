@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Bell, Info } from "lucide-react";
+import { maskEmail, maskPhone } from "@/lib/access-link";
 
 interface NotificationSetting {
   id: string;
@@ -11,36 +12,52 @@ interface NotificationSetting {
   isOptOut?: boolean;
 }
 
-const defaultSettings: NotificationSetting[] = [
+type NotificationsCardProps = {
+  mobileNumber?: string;
+  emailAddress?: string;
+  preferredChannel?: string;
+};
+
+const buildDefaultSettings = (
+  mobileNumber?: string,
+  emailAddress?: string,
+  preferredChannel?: string
+): NotificationSetting[] => [
   {
     id: "sms",
     label: "SMS Notification",
-    detail: "*** *** **5 678",
-    enabled: false,
+    detail: maskPhone(mobileNumber),
+    enabled: preferredChannel === "SMS",
   },
   {
     id: "email",
     label: "Email Notification",
-    detail: "am*****@gmail.com",
-    enabled: true,
+    detail: maskEmail(emailAddress),
+    enabled: preferredChannel === "EMAIL" || (!preferredChannel && !!emailAddress),
   },
   {
     id: "whatsapp",
     label: "WhatsApp Notification",
-    detail: "*** *** **5 678",
-    enabled: false,
+    detail: maskPhone(mobileNumber),
+    enabled: preferredChannel === "WHATSAPP",
   },
   {
     id: "optout",
     label: "Opt out of receiving notifications",
     detail: "You will stop receiving shipment updates through SMS, Email, or WhatsApp",
-    enabled: false,
+    enabled: preferredChannel === "NONE",
     isOptOut: true,
   },
 ];
 
-export default function NotificationsCard() {
-  const [settings, setSettings] = useState<NotificationSetting[]>(defaultSettings);
+export default function NotificationsCard({
+  mobileNumber,
+  emailAddress,
+  preferredChannel,
+}: NotificationsCardProps) {
+  const [settings, setSettings] = useState<NotificationSetting[]>(
+    buildDefaultSettings(mobileNumber, emailAddress, preferredChannel)
+  );
 
   const toggleSetting = (id: string) => {
     setSettings((prev) =>
@@ -53,7 +70,6 @@ export default function NotificationsCard() {
       className="rounded-2xl p-5 sm:p-6 fade-in-up fade-in-up-delay-1"
       style={{ backgroundColor: "#243044" }}
     >
-      {/* Header */}
       <div className="flex items-center gap-3 mb-5">
         <div
           className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
@@ -67,12 +83,11 @@ export default function NotificationsCard() {
             <Info size={12} className="inline-block ml-0.5" style={{ color: "#64748b" }} />
           </p>
           <p className="text-base font-bold" style={{ color: "#f1f5f9" }}>
-            SMS Notifications
+            {preferredChannel || "Notification Preferences"}
           </p>
         </div>
       </div>
 
-      {/* Settings List */}
       <div className="flex flex-col gap-4">
         {settings.map((setting) => (
           <div key={setting.id}>
@@ -101,7 +116,6 @@ export default function NotificationsCard() {
                 <span className="toggle-slider" />
               </label>
             </div>
-            {/* Divider except last */}
             {setting.id !== "optout" && (
               <div className="mt-4" style={{ borderBottom: "1px solid #2c3a52" }} />
             )}

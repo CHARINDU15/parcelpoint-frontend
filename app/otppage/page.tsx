@@ -1,22 +1,188 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import {
+  decodeTokenPayload,
+  formatDateTime,
+  mapResponseToDashboardData,
+  mapTokenPayloadToResponseData,
+  maskEmail,
+  maskPhone,
+} from "@/lib/access-link";
 
-export default function OTPPage() {
-  const [step, setStep] = useState(1); // 1: Selection, 2: Input
+const ORCHESTRATION_API_BASE =
+  process.env.NEXT_PUBLIC_ORCHESTRATION_API_URL || "http://localhost:3002";
+
+function OTPPageContent() {
+  const [step, setStep] = useState(1);
   const [method, setMethod] = useState<"mobile" | "email">("mobile");
-  const [timer, setTimer] = useState(60);
+  const [timer, setTimer] = useState(120);
   const [otp, setOtp] = useState(new Array(6).fill(""));
   const [error, setError] = useState<string | null>(null);
-  
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const [accessToken, setAccessToken] = useState("");
+  const [shipmentId, setShipmentId] = useState("");
+  const [receiverMobile, setReceiverMobile] = useState("");
+  const [receiverEmail, setReceiverEmail] = useState("");
+  const [receiverName, setReceiverName] = useState("Customer");
+  const [deliveryDate, setDeliveryDate] = useState("N/A");
+  const [preferredDeliveryOption, setPreferredDeliveryOption] = useState("Not selected");
+  const [accessExpiry, setAccessExpiry] = useState("N/A");
+  const [phoneNumber, setPhoneNumber] = useState("No mobile available");
+  const [emailAddress, setEmailAddress] = useState("No email available");
+
   const router = useRouter();
-  const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
+  const searchParams = useSearchParams();
 
-  const phoneNumber = "*****6388";
-  const emailAddress = "hiru****@gmail.com";
+  const canRequestOtp = useMemo(() => {
+    if (!shipmentId || !accessToken) return false;
+    if (method === "mobile") return !!receiverMobile;
+    return !!receiverEmail;
+  }, [shipmentId, accessToken, method, receiverMobile, receiverEmail]);
 
-  // Countdown Timer Logic
+  const hasMobileChannel = !!receiverMobile;
+  const hasEmailChannel = !!receiverEmail;
+
+  const persistDashboardData = useCallback((responseData?: ReturnType<typeof mapTokenPayloadToResponseData>) => {
+    if (!responseData) return;
+
+    sessionStorage.setItem(
+      "parcelpoint_shipment_data",
+      JSON.stringify(mapResponseToDashboardData(responseData))
+    );
+  }, []);
+
+  const requestOtp = async () => {
+    if (!canRequestOtp || submitting) return;
+
+    try {
+      setSubmitting(true);
+      setError(null);
+
+      const response = await fetch(`${ORCHESTRATION_API_BASE}/api/otp/request`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({
+          shipmentId,
+          channel: method === "mobile" ? "SMS" : "EMAIL",
+          destination: method === "mobile" ? receiverMobile : receiverEmail,
+        }),
+      });
+
+      const payload = await response.json();
+      if (!response.ok || !payload.success) {
+        throw new Error(payload.error || "Failed to request OTP");
+      }
+
+      const expiresAt = payload?.data?.expiresAt;
+      const secondsRemaining = expiresAt
+        ? Math.max(0, Math.floor((new Date(expiresAt).getTime() - Date.now()) / 1000))
+        : 120;
+
+      setStep(2);
+      setOtp(new Array(6).fill(""));
+      setTimer(secondsRemaining || 120);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to request OTP");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const verifyOtp = async () => {
+    const fullOtp = otp.join("");
+
+    if (timer === 0) {
+      setError("OTP has expired. Please request a new code.");
+      return;
+    }
+
+    if (fullOtp.length < 6) {
+      setError("Please enter all 6 digits.");
+      return;
+    }
+
+    try {
+      setSubmitting(true);
+      setError(null);
+
+      const response = await fetch(`${ORCHESTRATION_API_BASE}/api/otp/verify`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({ shipmentId, otp: fullOtp }),
+      });
+
+      const payload = await response.json();
+      if (!response.ok || !payload.success) {
+        throw new Error(payload.error || "OTP verification failed");
+      }
+
+      sessionStorage.setItem("parcelpoint_access_token", accessToken);
+      sessionStorage.setItem("parcelpoint_link_token", accessToken);
+      sessionStorage.setItem("parcelpoint_shipment_id", shipmentId);
+      sessionStorage.setItem("parcelpoint_otp_verified", "true");
+      router.push("/");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "OTP verification failed");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  useEffect(() => {
+    const token = (searchParams.get("token") || "").trim();
+    if (!token) {
+      setError("Missing access token in URL.");
+      setLoading(false);
+      return;
+    }
+
+    setAccessToken(token);
+    sessionStorage.setItem("parcelpoint_link_token", token);
+
+    // Try to decode embedded payload and use it if available to avoid an extra API call
+    const payload = decodeTokenPayload(token);
+    if (payload?.exp && payload.exp * 1000 <= Date.now()) {
+      setError("Access link has expired.");
+      setLoading(false);
+      return;
+    }
+
+    if (payload && typeof payload.shipmentId === "string") {
+      setShipmentId(payload.shipmentId);
+      sessionStorage.setItem("parcelpoint_shipment_id", payload.shipmentId);
+
+      if (payload.consignment) {
+        const c = payload.consignment;
+        setReceiverMobile(c.receiverMobile || "");
+        setReceiverEmail(c.receiverEmail || "");
+        setReceiverName(c.receiverName || "Customer");
+        setDeliveryDate(c.deliveryDate ? formatDateTime(c.deliveryDate) : "N/A");
+        setPreferredDeliveryOption(c.preferredDeliveryOption || "Not selected");
+        setAccessExpiry(formatDateTime(payload.accessMeta?.expiresAt ? new Date(payload.accessMeta.expiresAt * 1000).toISOString() : undefined));
+        setPhoneNumber(maskPhone(c.receiverMobile));
+        setEmailAddress(maskEmail(c.receiverEmail));
+        if (!c.receiverMobile) setMethod("email");
+
+        persistDashboardData(mapTokenPayloadToResponseData(payload));
+
+        setLoading(false);
+        return;
+      }
+    }
+
+    setError("Invalid access token payload.");
+    setLoading(false);
+  }, [searchParams, persistDashboardData]);
+
   useEffect(() => {
     let interval: NodeJS.Timeout;
     if (step === 2 && timer > 0) {
@@ -27,7 +193,6 @@ export default function OTPPage() {
     return () => clearInterval(interval);
   }, [step, timer]);
 
-  // Handle OTP Input focus jumps
   const handleChange = (element: HTMLInputElement, index: number) => {
     if (isNaN(Number(element.value))) return false;
 
@@ -38,34 +203,21 @@ export default function OTPPage() {
     }
   };
 
-  const handleRequestOTP = () => {
-    // Example: Trigger "Too many attempts" error
-    // setError("Too many attempts. Please try again later.");
-    // return;
-
-    setError(null);
-    setStep(2);
-    setTimer(60);
-  };
-
-  const handleVerify = () => {
-    const fullOtp = otp.join("");
-
-    if (timer === 0) {
-      setError("OTP has expired. Please request a new code.");
-    } else if (fullOtp.length < 6) {
-      setError("This code is no longer valid."); // Or "Please enter full code"
-    } else {
-      router.push("/");
-    }
-  };
-
   const handleResend = () => {
     setOtp(new Array(6).fill(""));
-    setTimer(60);
     setError(null);
-    // Trigger API call here
+    requestOtp();
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-[#ffffff] p-4 font-sans">
+        <div className="w-full max-w-2xl bg-[#1e293b] rounded-2xl p-10 py-16 shadow-2xl text-center text-white">
+          Loading shipment details...
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-[#ffffff] p-4 font-sans">
@@ -93,31 +245,52 @@ export default function OTPPage() {
         <h1 className="text-4xl font-extrabold mb-4 tracking-tight mt-4">
           Verify Your Identity!
         </h1>
-        
+
         <p className="text-slate-300 text-lg mb-10 font-medium">
-          How would you like to receive your One Time Passcode?
+          How would you like to receive your One Time Passcode for {shipmentId || "your shipment"}?
         </p>
+
+        <div className="mb-8 grid grid-cols-1 gap-3 rounded-2xl border border-white/10 bg-white/5 p-4 text-left md:grid-cols-2">
+          <div>
+            <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Receiver</p>
+            <p className="mt-1 text-base font-semibold text-white">{receiverName}</p>
+          </div>
+          <div>
+            <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Delivery date</p>
+            <p className="mt-1 text-base font-semibold text-white">{deliveryDate}</p>
+          </div>
+          <div>
+            <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Preferred option</p>
+            <p className="mt-1 text-base font-semibold text-white">{preferredDeliveryOption}</p>
+          </div>
+          <div>
+            <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Link expires</p>
+            <p className="mt-1 text-base font-semibold text-white">{accessExpiry}</p>
+          </div>
+        </div>
 
         {/* Method Toggle Buttons */}
         <div className="flex flex-row justify-center gap-4 mb-10">
           <button
-            onClick={() => step === 1 && setMethod("mobile")}
+            onClick={() => step === 1 && hasMobileChannel && setMethod("mobile")}
+            disabled={!hasMobileChannel}
             className={`px-10 py-3 rounded-xl font-bold text-lg transition-all border-2 ${
               method === "mobile"
                 ? "bg-[#ff6b3d] border-[#ff6b3d]"
                 : "bg-transparent border-white/20 hover:border-white/40"
-            } ${step === 2 ? 'opacity-50 cursor-not-allowed' : ''}`}
+            } ${step === 2 || !hasMobileChannel ? 'opacity-50 cursor-not-allowed' : ''}`}
           >
             Mobile
           </button>
           
           <button
-            onClick={() => step === 1 && setMethod("email")}
+            onClick={() => step === 1 && hasEmailChannel && setMethod("email")}
+            disabled={!hasEmailChannel}
             className={`px-10 py-3 rounded-xl font-bold text-lg transition-all border-2 ${
               method === "email"
                 ? "bg-[#ff6b3d] border-[#ff6b3d]"
                 : "bg-transparent border-white/20 hover:border-white/40"
-            } ${step === 2 ? 'opacity-50 cursor-not-allowed' : ''}`}
+            } ${step === 2 || !hasEmailChannel ? 'opacity-50 cursor-not-allowed' : ''}`}
           >
             Email
           </button>
@@ -133,10 +306,11 @@ export default function OTPPage() {
 
         {step === 1 ? (
           <button
-            onClick={handleRequestOTP}
-            className="bg-[#ff6b3d] hover:bg-[#b05638] px-10 py-3 rounded-xl font-bold text-lg flex items-center gap-2 mx-auto mt-12 transition-all shadow-lg active:scale-95"
+            onClick={requestOtp}
+            disabled={!canRequestOtp || submitting}
+            className="bg-[#ff6b3d] hover:bg-[#b05638] disabled:opacity-50 disabled:cursor-not-allowed px-10 py-3 rounded-xl font-bold text-lg flex items-center gap-2 mx-auto mt-12 transition-all shadow-lg active:scale-95"
           >
-            Request OTP <span className="text-2xl">›</span>
+            {submitting ? "Requesting..." : "Request OTP"} <span className="text-2xl">›</span>
           </button>
         ) : (
           <div className="flex flex-col items-center animate-in fade-in zoom-in-95 duration-500">
@@ -164,20 +338,38 @@ export default function OTPPage() {
 
             <button 
               onClick={handleResend}
-              className="text-slate-200 underline text-sm hover:text-white mb-8 transition-colors"
+              disabled={submitting}
+              className="text-slate-200 underline text-sm hover:text-white mb-8 transition-colors disabled:opacity-50"
             >
               Send a New Passcode
             </button>
 
             <button
-              onClick={handleVerify}
-              className="bg-[#ff6b3d] hover:bg-[#b05638] px-14 py-3 rounded-xl font-bold text-lg flex items-center gap-2 transition-all shadow-lg active:scale-95"
+              onClick={verifyOtp}
+              disabled={submitting}
+              className="bg-[#ff6b3d] hover:bg-[#b05638] disabled:opacity-50 disabled:cursor-not-allowed px-14 py-3 rounded-xl font-bold text-lg flex items-center gap-2 transition-all shadow-lg active:scale-95"
             >
-              Verify <span className="text-2xl">›</span>
+              {submitting ? "Verifying..." : "Verify"} <span className="text-2xl">›</span>
             </button>
           </div>
         )}
       </div>
     </div>
+  );
+}
+
+export default function OTPPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex items-center justify-center min-h-screen bg-[#ffffff] p-4 font-sans">
+          <div className="w-full max-w-2xl bg-[#1e293b] rounded-2xl p-10 py-16 shadow-2xl text-center text-white">
+            Loading shipment details...
+          </div>
+        </div>
+      }
+    >
+      <OTPPageContent />
+    </Suspense>
   );
 }

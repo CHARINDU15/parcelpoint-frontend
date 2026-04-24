@@ -2,187 +2,102 @@
 
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
+import { submitDeliveryOption } from "@/lib/delivery-options";
 
 interface TrustedPersonModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onSuccess?: () => void | Promise<void>;
 }
 
 export default function TrustedPersonModal({
   isOpen,
   onClose,
+  onSuccess,
 }: TrustedPersonModalProps) {
   const [mounted, setMounted] = useState(false);
-  const [textLength, setTextLength] = useState(0);
+  const [trustedPersonName, setTrustedPersonName] = useState("");
+  const [trustedPersonMobile, setTrustedPersonMobile] = useState("");
+  const [additionalInfo, setAdditionalInfo] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
+
+  useEffect(() => setMounted(true), []);
 
   useEffect(() => {
-    setMounted(true);
-  }, []);
+    if (!isOpen) return;
+    document.body.style.overflow = "hidden";
+    setTrustedPersonName("");
+    setTrustedPersonMobile("");
+    setAdditionalInfo("");
+    setError("");
 
-  useEffect(() => {
-    document.body.style.overflow = isOpen ? "hidden" : "auto";
+    return () => {
+      document.body.style.overflow = "unset";
+    };
   }, [isOpen]);
 
   if (!isOpen || !mounted) return null;
 
+  const handleSubmit = async () => {
+    if (!trustedPersonName || !trustedPersonMobile) {
+      setError("Trusted person name and mobile number are required.");
+      return;
+    }
+
+    try {
+      setSubmitting(true);
+      setError("");
+      await submitDeliveryOption({
+        option: "LEAVE_WITH_TRUSTED_PERSON",
+        trustedPersonName,
+        trustedPersonMobile,
+        additionalInfo,
+      });
+      await onSuccess?.();
+      onClose();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to save trusted person");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   return createPortal(
-    <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
-      
-      {/* Overlay */}
-      <div
-        className="absolute inset-0 bg-[#2f3b4a]/60 backdrop-blur-sm"
-        onClick={onClose}
-      />
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative w-full max-w-lg rounded-[32px] bg-white shadow-2xl">
+        <div className="flex items-center justify-between border-b px-8 py-6">
+          <h3 className="text-xl font-bold text-slate-900">Leave with Trusted Person</h3>
+          <button onClick={onClose} className="text-slate-400 hover:text-slate-600">×</button>
+        </div>
 
-      {/* Modal */}
-      <div className="relative w-full max-w-[640px] max-h-[90vh] overflow-y-auto bg-[#f6f6f6] rounded-[22px] shadow-2xl p-6 sm:p-8">
+        <div className="space-y-5 px-8 py-6">
+          <input className="w-full rounded-xl border border-slate-200 p-3.5 text-sm outline-none focus:border-orange-500" placeholder="Trusted person name *" value={trustedPersonName} onChange={(e) => setTrustedPersonName(e.target.value)} />
+          <input className="w-full rounded-xl border border-slate-200 p-3.5 text-sm outline-none focus:border-orange-500" placeholder="Trusted person mobile *" value={trustedPersonMobile} onChange={(e) => setTrustedPersonMobile(e.target.value)} />
 
-        {/* Header */}
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-lg sm:text-[20px] font-semibold text-[#111827]">
-            Leave with Trusted Person
-          </h2>
+          <div className="relative">
+            <textarea
+              value={additionalInfo}
+              onChange={(e) => setAdditionalInfo(e.target.value)}
+              maxLength={300}
+              placeholder="Additional instructions"
+              className="h-28 w-full resize-none rounded-xl border border-slate-200 p-4 text-sm outline-none focus:border-orange-500"
+            />
+            <span className="absolute bottom-3 right-4 text-xs text-slate-400">{additionalInfo.length}/300</span>
+          </div>
+
+          {error ? <p className="text-sm font-medium text-red-500">{error}</p> : null}
 
           <button
-            onClick={onClose}
-            className="text-[#6b7280] hover:text-black text-[22px]"
+            onClick={handleSubmit}
+            disabled={submitting}
+            className="w-full rounded-full bg-[#ff6b35] px-10 py-3.5 font-bold text-white transition hover:bg-[#e85a20] disabled:opacity-50"
           >
-            ×
-          </button>
-        </div>
-
-        {/* Dropdown */}
-        <div className="mb-6">
-          <label className="label">
-            Trusted Person <span className="required">*</span>
-          </label>
-          <select className="inputStyle w-full text-[#9ca3af] ">
-            <option value="">Select Type</option>
-            <option>Family</option>
-            <option>Friend</option>
-            <option>Neighbor</option>
-          </select>
-        </div>
-
-        {/* Section Title */}
-        <h3 className="text-[15px] font-semibold text-[#111827] mb-4">
-          Trusted Person Details
-        </h3>
-
-        {/* Name + Phone */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
-          <div>
-            <label className="label">Name</label>
-            <input type="text" className="inputStyle w-full text-[#9ca3af]" />
-          </div>
-
-          <div>
-            <label className="label">
-              Phone Number <span className="required">*</span>
-            </label>
-            <input type="text" className="inputStyle w-full text-[#9ca3af]" />
-          </div>
-        </div>
-
-        {/* Address 1 */}
-        <div className="mb-4">
-          <label className="label">
-            Address Line 01 <span className="required">*</span>
-          </label>
-          <input type="text" className="inputStyle w-full text-[#9ca3af]" />
-        </div>
-
-        {/* Address 2 */}
-        <div className="mb-4">
-          <label className="label">Address Line 02</label>
-          <input type="text" className="inputStyle w-full text-[#9ca3af]" />
-        </div>
-
-        {/* Postal + City */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
-          <div>
-            <label className="label">
-              Postal Code <span className="required">*</span>
-            </label>
-            <input type="text" className="inputStyle w-full text-[#9ca3af]" />
-          </div>
-
-          <div>
-            <label className="label">
-              City <span className="required">*</span>
-            </label>
-            <input type="text" className="inputStyle w-full text-[#9ca3af]" />
-          </div>
-        </div>
-
-        {/* District */}
-        <div className="mb-4">
-          <label className="label">
-            District <span className="required">*</span>
-          </label>
-          <input type="text" className="inputStyle w-full text-[#9ca3af]" />
-        </div>
-
-        {/* Additional Info */}
-        <div className="relative mb-6">
-          <label className="label">Additional Information</label>
-          <textarea
-            maxLength={300}
-            onChange={(e) => setTextLength(e.target.value.length)}
-            className="w-full h-[110px] p-4 rounded-[12px] border border-[#d6d6d6] bg-[#f9f9f9] text-[14px] resize-none outline-none focus:border-[#ff6b35] text-[#9ca3af]"
-          />
-          <span className="absolute bottom-3 right-4 text-[12px] text-[#9ca3af]">
-            {textLength}/300
-          </span>
-        </div>
-
-        {/* Checkbox */}
-        <div className="flex items-center gap-3 mb-6">
-          <input
-            type="checkbox"
-            className="w-[18px] h-[18px] accent-[#ff6b35] cursor-pointer"
-          />
-          <span className="text-[14px] text-[#374151]">
-            Change Estimated Delivery Date
-          </span>
-        </div>
-
-        {/* Button */}
-        <div className="flex justify-end">
-          <button
-            onClick={onClose}
-            className="bg-[#ff6b35] hover:bg-[#e85a20] transition text-white text-[15px] font-semibold px-8 py-3 rounded-full shadow-md"
-          >
-            Done
+            {submitting ? "Saving..." : "Save Trusted Person"}
           </button>
         </div>
       </div>
-
-      {/* Styles */}
-      <style jsx>{`
-        .inputStyle {
-          height: 46px;
-          padding: 0 16px;
-          border-radius: 12px;
-          border: 1px solid #d6d6d6;
-          background: #f9f9f9;
-          font-size: 14px;
-          outline: none;
-        }
-        .inputStyle:focus {
-          border-color: #ff6b35;
-        }
-        .label {
-          display: block;
-          margin-bottom: 6px;
-          font-size: 14px;
-          font-weight: 500;
-          color: #374151;
-        }
-        .required {
-          color: #ef4444;
-        }
-      `}</style>
     </div>,
     document.body
   );
