@@ -21,7 +21,9 @@ import {
 } from "@/lib/customer-session";
 
 const ORCHESTRATION_API_BASE =
-  process.env.NEXT_PUBLIC_ORCHESTRATION_API_URL || "http://localhost:3002";
+  process.env.NEXT_PUBLIC_API_GATEWAY_URL ||
+  process.env.NEXT_PUBLIC_ORCHESTRATION_API_URL ||
+  "http://localhost:8000";
 
 const loadDashboardShipmentData = (): DashboardShipmentData => {
   if (typeof window === "undefined") return emptyDashboardShipmentData;
